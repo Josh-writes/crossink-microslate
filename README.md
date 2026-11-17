@@ -1,3 +1,9 @@
+> **MicroSlate dual-boot build of [CrossInk](https://github.com/uxjulia/CrossInk) by uxjulia.** Same reader, plus a
+> "MicroSlate" entry on the home screen when [MicroSlate](https://github.com/Josh-writes/microslate-firmware) is installed
+> next to it, and no self-updating there (MicroSlate installs CrossInk updates so they never overwrite it). MicroSlate
+> installs this build from its own menu on the reTerminal Sticky and Xteink X4 Pro. **Reader issues and credit belong
+> upstream at uxjulia/CrossInk**; issues about switching or installing go to microslate-firmware.
+
 > **This is a personal fork of [CrossPoint Reader](https://github.com/crosspoint-reader/crosspoint-reader)** with a focus on improved fonts and minimal reading stats.
 
 ### Supported Devices
