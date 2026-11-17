@@ -14,6 +14,7 @@
 
 #include "FirmwareBoardTag.h"
 #include "OtaBootSwitch.h"
+#include "microslate_switch.h"
 
 namespace firmware_flash {
 
@@ -264,6 +265,10 @@ Result validateImageFile(const char* sdPath, size_t partitionSize) {
 }
 
 Result flashValidatedFile(HalFile& file, ProgressCb onProgress, void* ctx) {
+  // Every flash path ends here: next to MicroSlate the "next" partition is MicroSlate's slot.
+  // cppcheck sees microslate_switch.h's host stubs (no ESP-IDF headers), where this is constant.
+  // cppcheck-suppress knownConditionTrueFalse
+  if (!msswitch::selfUpdateAllowed()) return Result::NO_PARTITION;
   const esp_partition_t* dest = esp_ota_get_next_update_partition(nullptr);
   if (!dest) {
     LOG_ERR("FLASH", "no next-update partition");
@@ -323,6 +328,10 @@ Result flashValidatedFile(HalFile& file, ProgressCb onProgress, void* ctx) {
 }
 
 Result flashFromSdPath(const char* sdPath, ProgressCb onProgress, void* ctx) {
+  // Next to MicroSlate the "next" update partition is MicroSlate's slot.
+  // cppcheck sees microslate_switch.h's host stubs (no ESP-IDF headers), where this is constant.
+  // cppcheck-suppress knownConditionTrueFalse
+  if (!msswitch::selfUpdateAllowed()) return Result::NO_PARTITION;
   // Resolve destination first so validation can enforce the OTA partition
   // limit before the same open file is used for the write pass.
   const esp_partition_t* dest = esp_ota_get_next_update_partition(nullptr);

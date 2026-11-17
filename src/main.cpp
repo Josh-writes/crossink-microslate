@@ -106,6 +106,7 @@ inline esp_sleep_wakeup_cause_t esp_sleep_get_wakeup_cause() { return ESP_SLEEP_
 #include "components/UITheme.h"
 #include "components/icons/tablerFilledIcons.h"
 #include "fontIds.h"
+#include "microslate_switch.h"
 #include "network/UsbSerialFileTransfer.h"
 #ifdef SIMULATOR
 #include <SimulatorLifecycle.h>
@@ -121,6 +122,17 @@ inline esp_sleep_wakeup_cause_t esp_sleep_get_wakeup_cause() { return ESP_SLEEP_
 #include "util/FrontlightSchedule.h"
 #include "util/ScreenshotUtil.h"
 #include "util/SleepWakePolicy.h"
+
+// MicroSlate dual-boot marker: MicroSlate reads it from the other app slot to name and check this build.
+#if FREEINK_DEVICE_STICKY
+MS_SWITCH_APP("crossink", "CrossInk", "sticky");
+#elif FREEINK_DEVICE_X4PRO
+MS_SWITCH_APP("crossink", "CrossInk", "x4pro");
+#elif FREEINK_DEVICE_X4CLASSIC
+MS_SWITCH_APP("crossink", "CrossInk", "x4c");
+#else
+MS_SWITCH_APP("crossink", "CrossInk", "x4,x3");
+#endif
 
 GfxRenderer renderer(display);
 MappedInputManager mappedInputManager(gpio, renderer);
@@ -1267,6 +1279,7 @@ void setup() {
   // only on screens that explicitly allow the fallback.
   gpio.setSharedConfirmPowerShortPressEmitsPower(true);
   powerManager.begin();
+  msswitch::begin();
 
   const auto wakeupReason = gpio.getWakeupReason();
 #ifndef SIMULATOR
@@ -1290,6 +1303,9 @@ void setup() {
 #else
   const bool recoveryFirmwareMode = false;
 #endif
+  // Next to MicroSlate the recovery combo opens MicroSlate instead of the SD flasher,
+  // which would overwrite MicroSlate (see microslate_switch.h).
+  if (recoveryFirmwareMode && !msswitch::selfUpdateAllowed()) msswitch::openMicroSlate();
 
   halTiltSensor.begin();
   halClock.begin();

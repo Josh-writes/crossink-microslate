@@ -48,6 +48,7 @@ enum class SettingAction {
   ClearCache,
   CheckForUpdates,
   SdFirmwareUpdate,
+  MicroSlate,
   Language,
   KeyboardLayouts,
   DownloadFonts,

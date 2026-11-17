@@ -20,6 +20,7 @@
 #include "QuickActions.h"
 #include "activities/settings/SettingsActivity.h"
 #include "components/UITheme.h"
+#include "microslate_switch.h"
 #include "util/Dictionary.h"
 #include "util/DictionaryRegistry.h"
 #include "util/FontFamilyLabel.h"
@@ -1041,14 +1042,21 @@ inline std::vector<SettingInfo> buildDisplaySleepSettingsList(const std::vector<
 inline std::vector<SettingInfo> buildSystemSettingsParentList(const std::vector<SettingInfo>& allSettings) {
   std::vector<SettingInfo> systemSettings;
   systemSettings.reserve(8);
+  // Next to MicroSlate (dual boot): a way back to MicroSlate, listed first.
+  if (msswitch::microslatePresent()) {
+    systemSettings.push_back(SettingInfo::Action(StrId::STR_MICROSLATE, SettingAction::MicroSlate));
+  }
   systemSettings.push_back(SettingInfo::Submenu(StrId::STR_SYSTEM_DEVICE, SettingAction::SystemDevice));
   systemSettings.push_back(SettingInfo::Submenu(StrId::STR_SYSTEM_FILES_CACHE, SettingAction::SystemFilesCache));
   systemSettings.push_back(SettingInfo::Submenu(StrId::STR_READING_STATS, SettingAction::SystemReadingStats));
   systemSettings.push_back(SettingInfo::Action(StrId::STR_WIFI_NETWORKS, SettingAction::Network));
   systemSettings.push_back(SettingInfo::Action(StrId::STR_KOREADER_SYNC, SettingAction::KOReaderSync));
   systemSettings.push_back(SettingInfo::Action(StrId::STR_OPDS_SERVERS, SettingAction::OPDSBrowser));
-  systemSettings.push_back(SettingInfo::Action(StrId::STR_CHECK_UPDATES, SettingAction::CheckForUpdates));
-  systemSettings.push_back(SettingInfo::Action(StrId::STR_SD_FIRMWARE_UPDATE, SettingAction::SdFirmwareUpdate));
+  // Next to MicroSlate, MicroSlate installs CrossInk updates; CrossInk's own would overwrite MicroSlate.
+  if (msswitch::selfUpdateAllowed()) {
+    systemSettings.push_back(SettingInfo::Action(StrId::STR_CHECK_UPDATES, SettingAction::CheckForUpdates));
+    systemSettings.push_back(SettingInfo::Action(StrId::STR_SD_FIRMWARE_UPDATE, SettingAction::SdFirmwareUpdate));
+  }
   return systemSettings;
 }
 

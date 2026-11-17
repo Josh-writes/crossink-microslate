@@ -40,6 +40,7 @@
 #include "components/themes/lyra/LyraCarouselTheme.h"
 #include "components/themes/minimal/MinimalTheme.h"
 #include "fontIds.h"
+#include "microslate_switch.h"
 
 namespace {
 constexpr uint32_t CAROUSEL_CACHE_MAGIC = 0x43434152;  // "CCAR"
@@ -62,6 +63,7 @@ enum class HomeMenuAction {
   Bookmarks,
   FileTransfer,
   Settings,
+  MicroSlate,  // back to MicroSlate; only listed when MicroSlate is in the other app slot
 };
 
 struct HomeMenuEntry {
@@ -71,7 +73,7 @@ struct HomeMenuEntry {
 };
 
 struct HomeMenuEntries {
-  static constexpr int kCapacity = 8;
+  static constexpr int kCapacity = 9;  // every optional entry + Continue Reading + MicroSlate
   std::array<HomeMenuEntry, kCapacity> entries{};
   int count = 0;
 
@@ -233,6 +235,15 @@ const char* savedItemsLabel(bool hasBookmarks, bool hasClippings) {
   return tr(STR_BOOKMARKS);
 }
 
+// Next to MicroSlate every home menu ends with a way back to it.
+void appendMicroSlateItem(HomeMenuEntries& items) {
+  // cppcheck sees microslate_switch.h's host stubs (no ESP-IDF headers), where this is constant.
+  // cppcheck-suppress knownConditionTrueFalse
+  if (msswitch::microslatePresent()) {
+    items.push({tr(STR_MICROSLATE), Recent, HomeMenuAction::MicroSlate});
+  }
+}
+
 void appendHomeMenuItems(HomeMenuEntries& items, bool hasOpdsServers, bool hasReadingStats, bool hasBookmarks,
                          bool hasClippings) {
   items.push({tr(STR_BROWSE_FILES), Folder, HomeMenuAction::BrowseFiles});
@@ -250,6 +261,7 @@ void appendHomeMenuItems(HomeMenuEntries& items, bool hasOpdsServers, bool hasRe
 
   items.push({tr(STR_FILE_TRANSFER), Transfer, HomeMenuAction::FileTransfer});
   items.push({tr(STR_SETTINGS_TITLE), Settings, HomeMenuAction::Settings});
+  appendMicroSlateItem(items);
 }
 
 HomeMenuEntries buildHomeMenuItems(bool hasOpdsServers, bool hasReadingStats, bool hasBookmarks, bool hasClippings) {
@@ -277,6 +289,7 @@ HomeMenuEntries buildMinimalMenuItems(bool hasOpdsServers, bool hasReadingStats,
   }
 
   items.push({tr(STR_FILE_TRANSFER), Transfer, HomeMenuAction::FileTransfer});
+  appendMicroSlateItem(items);
   return items;
 }
 
@@ -544,6 +557,12 @@ int HomeActivity::getMenuItemCount() const {
     count++;
   }
   if (hasBookmarks || hasClippings) {
+    count++;
+  }
+  // Keep in step with appendMicroSlateItem(): the MicroSlate entry must be reachable by buttons.
+  // cppcheck sees microslate_switch.h's host stubs (no ESP-IDF headers), where this is constant.
+  // cppcheck-suppress knownConditionTrueFalse
+  if (msswitch::microslatePresent()) {
     count++;
   }
   return count;
@@ -1475,6 +1494,9 @@ void HomeActivity::loop() {
           case HomeMenuAction::FileTransfer:
             onFileTransferOpen();
             break;
+          case HomeMenuAction::MicroSlate:
+            msswitch::openMicroSlate();
+            break;
           case HomeMenuAction::ContinueReading:
           case HomeMenuAction::Settings:
             break;
@@ -1722,6 +1744,9 @@ void HomeActivity::loop() {
         break;
       case HomeMenuAction::Settings:
         onSettingsOpen();
+        break;
+      case HomeMenuAction::MicroSlate:
+        msswitch::openMicroSlate();
         break;
     }
   };

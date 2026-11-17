@@ -51,6 +51,7 @@
 #include "components/UiAppHelpers.h"
 #include "components/icons/frontlightHeaderIcons.h"
 #include "fontIds.h"
+#include "microslate_switch.h"
 #include "util/DictionaryRegistry.h"
 #include "util/FrontlightSchedule.h"
 
@@ -1187,6 +1188,9 @@ void SettingsActivity::toggleCurrentSetting() {
         break;
       case SettingAction::SdFirmwareUpdate:
         startActivityForResult(std::make_unique<SdFirmwareUpdateActivity>(renderer, mappedInput), resultHandler);
+        break;
+      case SettingAction::MicroSlate:
+        msswitch::openMicroSlate();
         break;
       case SettingAction::DownloadFonts:
         silentRestartToManageFonts();

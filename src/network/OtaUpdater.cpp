@@ -22,6 +22,7 @@ OtaUpdater::OtaUpdaterError OtaUpdater::installUpdate(ProgressCallback, void*, s
 #include "OtaUpdater.h"
 #include "esp_http_client.h"
 #include "esp_ota_ops.h"
+#include "microslate_switch.h"
 #include "mbedtls/sha256.h"
 #include "network/HttpDownloader.h"
 #include "network/WifiPowerSaveGuard.h"
@@ -370,6 +371,10 @@ const std::string& OtaUpdater::getLatestVersion() const { return latestVersion; 
 
 OtaUpdater::OtaUpdaterError OtaUpdater::installUpdate(ProgressCallback onProgress, void* ctx,
                                                       std::atomic<bool>* cancelRequested) {
+  // Next to MicroSlate, MicroSlate installs updates; the app must never flash itself.
+  // cppcheck sees microslate_switch.h's host stubs (no ESP-IDF headers), where this is constant.
+  // cppcheck-suppress knownConditionTrueFalse
+  if (!msswitch::selfUpdateAllowed()) return INTERNAL_UPDATE_ERROR;
   const auto isCancellationRequested = [cancelRequested]() -> bool {
     return cancelRequested != nullptr && cancelRequested->load(std::memory_order_relaxed);
   };
